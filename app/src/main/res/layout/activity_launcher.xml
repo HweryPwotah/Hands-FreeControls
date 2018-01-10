@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="1">
+
+    <Button
+        android:id="@+id/OpenNavigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/linearLayout2"
+        android:layout_weight="0.21"
+        android:text="Open Navigation"
+        android:onClick="OpenNavigation"/>
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="false"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="2dp"
+        android:orientation="horizontal"
+        android:weightSum="3"
+        android:layout_weight="0.23">
+
+        <Button
+            android:id="@+id/Settings"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.50"
+            android:text="Settings"
+            android:onClick="navigateToSettings"/>
+
+        <Button
+            android:id="@+id/About"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.50"
+            android:text="About"
+            android:onClick="navigateToAbout"/>
+    </LinearLayout>
+</LinearLayout>

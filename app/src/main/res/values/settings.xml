@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_motion_settings">Motion settings</string>
+    <string name="settings_horizontal_speed">Horizontal speed</string>
+    <string name="settings_vertical_speed">Vertical speed</string>
+
+    <integer name="axis_speed_default">8</integer>
+
+    <integer name="axis_speed_min">1</integer>
+    <integer name="axis_speed_max">20</integer>
+
+    <string name="settings_motion_smoothing">Motion smoothing</string>
+    <string name="settings_motion_smoothing_summary">Filter to smooth out pointer movements</string>
+
+    <integer name="motion_smoothing_default">2</integer>
+    <integer name="motion_smoothing_min">0</integer>
+    <integer name="motion_smoothing_max">8</integer>
+
+    <string name="settings_motion_threshold">Motion threshold</string>
+    <string name="settings_motion_threshold_summary">Minimum movements made to move the pointer</string>
+
+    <integer name="motion_threshold_default">1</integer>
+    <integer name="motion_threshold_min">0</integer>
+    <integer name="motion_threshold_max">5</integer>
+</resources>

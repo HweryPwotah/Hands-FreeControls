@@ -1,4 +1,27 @@
 <resources>
     <string name="app_name">Hands-Free Controls</string>
-    <string name="take_picture">Take picture</string>
+
+    <!-- Description shown in the accessibility service screen -->
+    <string name="service_description">Hands-Free Controls is a mouse emulator based on your facial movements, tracking your face using the front camera.</string>
+
+    <string name="about_content">
+        \n Hands-Free Controls\n
+        Developed by Victor Arsjad\n
+        001201400063\n
+        President University\n
+        Faculty of Computing\n
+        </string>]>
+    <string name="launcher_no_accessibility_settings">Opening accessibility settings.\n\nPlease enable accessibility for the program:\n\nSettings > Accessibility > Hands-Free Controls\n\nand then switch on the Hands-Free Controls accessibility service</string>
+    <string name="launcher_done">Done</string>
+
+    <!-- dock panel start -->
+    <string name="dock_back_button">Back button</string>
+    <string name="dock_home_button">Home button</string>
+    <string name="dock_recents_button">Recents button</string>
+    <string name="dock_notifications_button">Notifications button</string>
+    <string name="dock_menu_button">Expand/collapse dock menu</string>
+    <string name="dock_softkeyboard_button">Open keyboard</string>
+    <string name="dock_toggle_context_menu">Toggle pointer Context Menu</string>
+    <string name="dock_toggle_rest_mode">Toggle Rest mode. To disable automatic clicks while you read or watch a video, for instance.</string>
+    <!-- dock panel end -->
 </resources>
