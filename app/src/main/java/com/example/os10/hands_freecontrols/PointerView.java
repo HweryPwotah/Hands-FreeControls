@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
@@ -38,6 +39,7 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
         mPaintBox = new Paint();
         setWillNotDraw(false);
         mPointerLocation= new PointF();
+        Log.i("PointerView", "Trying to initialize pointer");
         PointerInitialization();
     }
 
@@ -54,17 +56,20 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
 //        mAlphaPointer= (255 * Preferences.get().getGamepadTransparency()) / 100;
 
         // re-scale pointer accordingly
+        Log.i("PointerView", "declaring pointer");
         BitmapDrawable bd = (BitmapDrawable)
                 ContextCompat.getDrawable(getContext(), R.drawable.pointer);
         Bitmap origBitmap= bd.getBitmap();
         origBitmap.setDensity(Bitmap.DENSITY_NONE);
 
         // desired long side in pixels of the pointer for this screen density
+        Log.i("PointerView", "declaring variables");
         float longSide= TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                 CURSOR_LONG_SIDE_DIP, getResources().getDisplayMetrics()) * size;
         float scaling = longSide / (float) bd.getIntrinsicHeight();
         float shortSide= scaling * bd.getIntrinsicWidth();
 
+        Log.i("PointerView", "other settings");
         mPointerBitmap = Bitmap.createScaledBitmap(origBitmap, (int) shortSide, (int) longSide, true);
         mPointerBitmap.setDensity(Bitmap.DENSITY_NONE);
 
@@ -76,7 +81,7 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
     @Override
     public void onDraw(Canvas canvas){
         super.onDraw(canvas);
-
+        Log.i("PointerView", "onDraw");
         // draw progress indicator
 //        if (mClickProgressPercent> 0) {
 //            float radius= ((float)
@@ -93,6 +98,7 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
 
         // draw pointer
         mPaintBox.setAlpha(255);
+        Log.i("PointerView", "draw pointer");
         canvas.drawBitmap(mPointerBitmap, mPointerLocation.x, mPointerLocation.y, mPaintBox);
     }
 

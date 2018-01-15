@@ -10,8 +10,6 @@ import android.widget.Toast;
 import org.opencv.android.OpenCVLoader;
 
 public class MainEngine extends AppCompatActivity {
-    private static final String TAG = "MainEngine";
-
     private static final int REQUEST_CAMERA_PERMISSION = 200;
 
     // Used to load the 'native-lib' library on application startup.
@@ -25,6 +23,7 @@ public class MainEngine extends AppCompatActivity {
     /* root overlay view */
     private OverlayView mOverlayView;
     private CameraView mCameraView;
+    private DockPanelView mDockPanelView;
 
     protected OverlayView getOverlayView() {
         return mOverlayView;
@@ -46,18 +45,28 @@ public class MainEngine extends AppCompatActivity {
         if (Preferences.initForA11yService(this) == null) return;
 
         //initializing User Interface: ViewGroup
+        Log.i("MainEngine", "Try to initialize OverlayView");
         mOverlayView = new OverlayView(mService);
 
-        //Initializing User Interface: Dock Panel
-
-
         //initializing User Interface: Camera
+        Log.i("MainEngine", "Try to initialize DockPanelView");
+        mDockPanelView = new DockPanelView(mService);
+        mOverlayView.addFullScreenLayer(mDockPanelView);
+
+        //Initializing User Interface: Dock Panel
+        Log.i("MainEngine", "Try to initialize CameraView");
         mCameraView = new CameraView(mService);
         mOverlayView.addFullScreenLayer(mCameraView);
 
+        mCameraView.startCamera();
+
         //initializing User Interface: Pointer
+        Log.i("MainEngine", "Try to initialize PointerView");
         mPointerView = new PointerView(mService);
         mOverlayView.addFullScreenLayer(mPointerView);
+
+
+        Log.i("MainEngine", "end of initialize");
     }
 
 //    @Override

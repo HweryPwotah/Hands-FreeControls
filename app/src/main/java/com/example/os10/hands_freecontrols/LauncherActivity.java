@@ -16,7 +16,7 @@ import android.widget.Toast;
 import static android.content.ContentValues.TAG;
 
 /**
- * Created by OS 10 on 12/21/2017.
+ * Launcher class. User will be directed to this activity on startup
  */
 
 public class LauncherActivity extends AppCompatActivity {
@@ -43,9 +43,9 @@ public class LauncherActivity extends AppCompatActivity {
 
         TheAccessibilityService service= TheAccessibilityService.get();
         if (null != service) { //The application has been given permission
-            /* Engine running, open notifications */
-            Toast.makeText(this, "Permission is granted", Toast.LENGTH_SHORT).show();
-            finish();
+//            Toast.makeText(this, "Permission is granted", Toast.LENGTH_SHORT).show();
+            //launch initialization
+            service.onServiceConnected();
         }
         else { //The application has not been given permission.
             //Thus, The application is running for the first time
@@ -57,13 +57,11 @@ public class LauncherActivity extends AppCompatActivity {
     }
 
     public void navigateToSettings(View view){
-        Toast.makeText(this, "Opening Settings..", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(this, SettingsActivity.class);
         this.startActivity(intent);
     }
 
     public void navigateToAbout(View view){
-        Toast.makeText(this, "Opening About..", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(this, AboutActivity.class);
         this.startActivity(intent);
     }

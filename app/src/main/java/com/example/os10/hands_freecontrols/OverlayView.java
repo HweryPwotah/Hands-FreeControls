@@ -10,15 +10,17 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 /**
- * Class that handles user interface such as Dock Panel, Pointer, and Camera (?).
+ * Class that creates user interface for tools such as: Dock Panel, Pointer, and Camera (?).
  */
 
-public class OverlayView {
+public class OverlayView extends RelativeLayout{
     private static final String TAG = "OverlayView";
-    FrameLayout mLayout;
+//    FrameLayout mLayout;
 
     OverlayView(Context c) {
-        mLayout = new FrameLayout(c);
+        super(c);
+
+//        mLayout = new FrameLayout(c);
 
         WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
 
@@ -27,8 +29,10 @@ public class OverlayView {
         // Transparent background
         layoutParams.format = PixelFormat.TRANSLUCENT;
 
+        layoutParams.type = WindowManager.LayoutParams.TYPE_PHONE |
+                WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY;
         //https://developer.android.com/reference/android/view/WindowManager.LayoutParams.html#TYPE_APPLICATION_OVERLAY
-        layoutParams.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
+//        layoutParams.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
 
         /*
          * Type of window. Whole screen is covered (including status bar)
@@ -46,13 +50,9 @@ public class OverlayView {
 
         layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
         layoutParams.height = WindowManager.LayoutParams.MATCH_PARENT;
-//        layoutParams.gravity = Gravity.LEFT;
-
-//        LayoutInflater inflater = LayoutInflater.from(c);
-//        inflater.inflate(R.layout.dock_panel_layout, mLayout);
 
         WindowManager wm= (WindowManager) c.getSystemService(Context.WINDOW_SERVICE);
-        wm.addView(mLayout, layoutParams);
+        wm.addView(this, layoutParams);
     }
 //    void cleanup() {
 //        WindowManager wm= (WindowManager) this.getContext().getSystemService(Context.WINDOW_SERVICE);
@@ -62,12 +62,12 @@ public class OverlayView {
 //    }
 
     public void addFullScreenLayer (View v) {
-        RelativeLayout.LayoutParams lp= new RelativeLayout.LayoutParams(mLayout.getWidth(), mLayout.getHeight());
+        RelativeLayout.LayoutParams lp= new RelativeLayout.LayoutParams(this.getWidth(), this.getHeight());
         lp.width= RelativeLayout.LayoutParams.MATCH_PARENT;
         lp.height= RelativeLayout.LayoutParams.MATCH_PARENT;
 
         v.setLayoutParams(lp);
-        mLayout.addView(v);
+        this.addView(v);
     }
 }
 

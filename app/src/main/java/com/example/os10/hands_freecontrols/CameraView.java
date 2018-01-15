@@ -1,7 +1,9 @@
 package com.example.os10.hands_freecontrols;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.SurfaceView;
 import android.widget.RelativeLayout;
 
@@ -24,23 +26,28 @@ import org.opencv.video.Video;
 import java.util.Arrays;
 
 /**
- * Created by OS 10 on 12/20/2017.
+ * Class that handles Camera View
  */
 
 public class CameraView extends RelativeLayout implements CameraBridgeViewBase.CvCameraViewListener2{
+//
+//    private static final int CAM_SURFACE_MIN_WIDTH_DP = 50;
+//    private static final int CAM_SURFACE_WIDTH_DEFAULT = 80;
+//    private static final int CAM_SURFACE_HEIGHT_DEFAULT = 60;
+//
+//    private int CAM_SURFACE_WIDTH = 176;
+//    private int CAM_SURFACE_HEIGHT = 144;
 
-    private int CAM_SURFACE_WIDTH = 352;
-    private int CAM_SURFACE_HEIGHT = 288;
-    private SurfaceView mCameraSurfaceView;
+//    private SurfaceView mCameraSurfaceView;
     // OpenCV capture&view facility
     private final CameraBridgeViewBase mCameraView;
     private Mat mRgba;
     private Mat mRgbaF;
     private Mat mRgbaT;
 
-    SurfaceView getCameraSurface(){
-        return mCameraView;
-    }
+//    SurfaceView getCameraSurface(){
+//        return mCameraView;
+//    }
     /**
      *
      * Camera constructor
@@ -61,6 +68,24 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
             throw new RuntimeException("Cannot initialize OpenCV");
         }
 
+
+        Resources r = getResources();
+
+
+//        float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+//                CAM_SURFACE_MIN_WIDTH_DP, r.getDisplayMetrics());
+//        if (px< CAM_SURFACE_WIDTH_DEFAULT) {
+//            // Use the default values
+//            CAM_SURFACE_WIDTH= CAM_SURFACE_WIDTH_DEFAULT;
+//            CAM_SURFACE_HEIGHT= CAM_SURFACE_HEIGHT_DEFAULT;
+//        }
+//        else {
+//            // Use calculated values. Make sure is not too small.
+//            CAM_SURFACE_WIDTH= (int) px;
+//            CAM_SURFACE_HEIGHT= (int)
+//                    ((px * CAM_SURFACE_HEIGHT_DEFAULT) / CAM_SURFACE_WIDTH_DEFAULT);
+//        }
+
         //initializing camera
         int cameraId = CameraBridgeViewBase.CAMERA_ID_FRONT;
 
@@ -71,26 +96,33 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
         mCameraView.setMaxFrameSize(352, 288);
         mCameraView.setVisibility(SurfaceView.VISIBLE);
 
-        mCameraView.enableView();
-
+        Log.i("CameraView", "Try to addCameraSurface");
         addCameraSurface(mCameraView);
     }
 
     /**
-     * Add a surface in wich the image from the camera will be displayed
+     * Add a surface in which the image from the camera will be displayed
      *
      * @param v a surface view
      */
     public void addCameraSurface(SurfaceView v) {
-        mCameraSurfaceView= v;
+//        mCameraSurfaceView= v;
 
         // set layout and add to parent
-        RelativeLayout.LayoutParams lp=
-                new RelativeLayout.LayoutParams(CAM_SURFACE_WIDTH, CAM_SURFACE_HEIGHT);
+//        RelativeLayout.LayoutParams lp=
+//                new RelativeLayout.LayoutParams(CAM_SURFACE_WIDTH, CAM_SURFACE_HEIGHT);
+//
+       RelativeLayout.LayoutParams lp=
+                new RelativeLayout.LayoutParams(176, 144);
         lp.addRule(RelativeLayout.CENTER_HORIZONTAL);
         v.setLayoutParams(lp);
 
         this.addView(v);
+    }
+
+    public void startCamera(){
+        Log.i("CameraView", "Enable Camera View");
+        mCameraView.enableView();
     }
 
     static Mat recognize(Mat InputFrame) {
