@@ -1,4 +1,4 @@
-    static Mat recognize(Mat InputFrame) {
+    static Mat recognize(Mat InputFrame) { 
 //        variables
         Mat HSV_RoI = new Mat(InputFrame.size(), CvType.CV_8UC3);
         Mat Mask = new Mat(InputFrame.size(),CvType.CV_8UC1);
