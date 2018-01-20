@@ -19,7 +19,9 @@ import static android.content.ContentValues.TAG;
  * Launcher class. User will be directed to this activity on startup
  */
 
+
 public class LauncherActivity extends AppCompatActivity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "onCreate");

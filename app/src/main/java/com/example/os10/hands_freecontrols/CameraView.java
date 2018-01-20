@@ -2,6 +2,8 @@ package com.example.os10.hands_freecontrols;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.PointF;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.SurfaceView;
@@ -13,17 +15,17 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfFloat;
-import org.opencv.core.MatOfInt;
-import org.opencv.core.Point;
+import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
-import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
-import org.opencv.core.TermCriteria;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.video.Video;
+import org.opencv.objdetect.CascadeClassifier;
 
-import java.util.Arrays;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Class that handles Camera View
@@ -44,6 +46,19 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
     private Mat mRgba;
     private Mat mRgbaF;
     private Mat mRgbaT;
+
+
+    //Haar Cascade variables
+    private static final String RES_FACE_CASCADE = "haarcascade_frontalface_alt.xml";
+    private static final String RES_EYES_CASCADE = "haarcascade_eye_tree_eyeglasses.xml";
+    private String[] mRawRes = {RES_FACE_CASCADE, RES_EYES_CASCADE};
+
+    private CascadeClassifier mFaceCascade;
+    private Mat mGrayscaleImage;
+
+    private int mAbsoluteFaceSize;
+    private static final float FACE_SIZE_PERCENTAGE = 0.3f;
+    private PointerView mPointerView;
 
 //    SurfaceView getCameraSurface(){
 //        return mCameraView;
@@ -71,21 +86,6 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
 
         Resources r = getResources();
 
-
-//        float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-//                CAM_SURFACE_MIN_WIDTH_DP, r.getDisplayMetrics());
-//        if (px< CAM_SURFACE_WIDTH_DEFAULT) {
-//            // Use the default values
-//            CAM_SURFACE_WIDTH= CAM_SURFACE_WIDTH_DEFAULT;
-//            CAM_SURFACE_HEIGHT= CAM_SURFACE_HEIGHT_DEFAULT;
-//        }
-//        else {
-//            // Use calculated values. Make sure is not too small.
-//            CAM_SURFACE_WIDTH= (int) px;
-//            CAM_SURFACE_HEIGHT= (int)
-//                    ((px * CAM_SURFACE_HEIGHT_DEFAULT) / CAM_SURFACE_WIDTH_DEFAULT);
-//        }
-
         //initializing camera
         int cameraId = CameraBridgeViewBase.CAMERA_ID_FRONT;
 
@@ -96,7 +96,6 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
         mCameraView.setMaxFrameSize(352, 288);
         mCameraView.setVisibility(SurfaceView.VISIBLE);
 
-        Log.i("CameraView", "Try to addCameraSurface");
         addCameraSurface(mCameraView);
     }
 
@@ -106,6 +105,7 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
      * @param v a surface view
      */
     public void addCameraSurface(SurfaceView v) {
+        Log.i("CameraView", "Adding CameraSurface");
 //        mCameraSurfaceView= v;
 
         // set layout and add to parent
@@ -120,109 +120,57 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
         this.addView(v);
     }
 
-    public void startCamera(){
-        Log.i("CameraView", "Enable Camera View");
-        mCameraView.enableView();
+    public void startCamera(@NonNull final Context context){
+        Log.i("CameraView", "Start Camera");
+
+        (new AsyncTask<String, Void, Boolean>() {
+
+            @Override
+            protected Boolean doInBackground(String... params) {
+
+                try {
+                    // First URL
+                    {
+                        // Copy the resource into a temp file so OpenCV can load it
+                        InputStream is = context.getResources().openRawResource(R.raw.haarcascade_frontalface_alt);
+                        File cascadeDir = context.getDir("cascade", Context.MODE_PRIVATE);
+                        File mCascadeFile = new File(cascadeDir, params[0]);
+                        FileOutputStream os = new FileOutputStream(mCascadeFile);
+
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        while ((bytesRead = is.read(buffer)) != -1) {
+                            os.write(buffer, 0, bytesRead);
+                        }
+                        is.close();
+                        os.close();
+
+                        // Load the cascade classifier
+                        mFaceCascade = new CascadeClassifier(mCascadeFile.getAbsolutePath());
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return true;
+            }
+
+            @Override
+            protected void onPostExecute(Boolean isSuccess) {
+                if(isSuccess) {
+                    mCameraView.enableView();
+//                    mIsDetectionOn = true;
+//                    mTimer.scheduleAtFixedRate(mBlinkCounterTask, 0, DETECTION_STEP_DURATION);
+                }
+//                else {
+//                    mToast.cancel();
+//                    mToast = Toast.makeText(getApplicationContext(), CASCADE_INIT_ERROR, Toast.LENGTH_SHORT);
+//                    mToast.show();
+//                }
+                super.onPostExecute(isSuccess);
+            }
+        }).execute(mRawRes);
     }
-
-    static Mat recognize(Mat InputFrame) {
-//        List<Mat> ImageList = new ArrayList<>();
-//        ImageList.add(InputFrame);
-
-
-//        variables were here
-        Mat HSV_RoI = new Mat(InputFrame.size(), CvType.CV_8UC3);
-//        MatOfInt channels = new MatOfInt(0);
-        Mat Mask = new Mat(InputFrame.size(),CvType.CV_8UC1);
-        Mat Hist = new Mat(InputFrame.size(),CvType.CV_8UC1);
-        Mat BackProj = new Mat();
-//        MatOfInt histSize = new MatOfInt(256, 256, 256);
-//        MatOfFloat ranges = new MatOfFloat(0.0f, 255.0f, 0.0f, 255.0f, 0.0f, 255.0f);
-//        MatOfInt histSize = new MatOfInt(180);
-
-//        MatOfInt histSize = new MatOfInt(16);
-//        MatOfFloat ranges = new MatOfFloat(0, 180);
-
-//        TermCriteria criteria = new TermCriteria(TermCriteria.EPS + TermCriteria.MAX_ITER, 10, 1);
-
-        RotatedRect curr_rect = new RotatedRect();
-        Rect prev_rect = new Rect(58, 48, 58, 48);
-
-//        Mat roi = new Mat(); //Region of Interest.
-//        roi = mRgba.submat(rect);
-//        Mat roiTmp = roi.clone();
-
-//        org.opencv.core.Size size = new org.opencv.core.Size(250,250);
-//        aInputFrame.size() = size;
-//        Imgproc.resize(aInputFrame, aInputFrame, aInputFrame.size());//aInputFrame.size());
-
-        //calculate Back Projection ===============================================================
-        Imgproc.cvtColor(InputFrame, HSV_RoI, Imgproc.COLOR_RGB2HSV);
-
-//        Core.inRange(HSV_RoI, new Scalar(0, 10, 60), new Scalar(20, 150, 255), Mask);
-        Core.inRange(HSV_RoI, new Scalar(0, 60, 32), new Scalar(180, 256, 256), Mask);
-
-//        Core.mixChannels(Arrays.asList(HSV_RoI), Arrays.asList(Mask), new MatOfInt(1));
-
-        //calcHist function parameters explanation
-        //(from http://opencv-java-tutorials.readthedocs.io/en/latest/04-opencv-basics.html)
-//        Imgproc.calcHist(Arrays.asList(HSV_RoI), channels, Mask, Hist, histSize, ranges);
-        Imgproc.calcHist(Arrays.asList(HSV_RoI), new MatOfInt(0), Mask, Hist, new MatOfInt(180), new MatOfFloat(0, 180));
-
-        Core.normalize(Hist, Hist, 0, 255, Core.NORM_MINMAX);
-
-        //calcBackProject( &hue, 1, 0, hist, backproj, &phranges, 1, true );
-
-        Imgproc.calcBackProject(Arrays.asList(HSV_RoI), new MatOfInt(0), Hist, BackProj, new MatOfFloat(0, 180), 1);
-
-
-        //MeanShift ===============================================================================
-        //an algorithm to find modes in a set of data samples representing an underlying
-        //probability density function
-
-//        while (true) {
-        curr_rect = Video.CamShift(BackProj, prev_rect, new TermCriteria(TermCriteria.EPS + TermCriteria.MAX_ITER, 10, 2));
-        //current rectangle becomes previous rectangle.
-//            curr_rect.angle = -curr_rect.angle;
-//            Point pt1 = new Point(curr_rect.size.width);
-//            Point pt2 = new Point();
-        prev_rect = curr_rect.boundingRect();
-        Imgproc.rectangle(InputFrame, new Point(prev_rect.x,
-                        prev_rect.y), //Top Left
-                new Point(prev_rect.x + prev_rect.width,
-                        prev_rect.y + prev_rect.height), //Bottom Right
-                new Scalar(255, 0, 0), 2);
-//            Log.i(TAG, "Rectangle position is in (" + prev_rect.x + ", " + prev_rect.y + ")");
-//            break;
-//        }
-
-
-//        descriptors2 = new Mat();
-//        keypoints2 = new MatOfKeyPoint();
-//        detector.detect(aInputFrame, keypoints2);
-//        descriptor.compute(aInputFrame, keypoints2, descriptors2);
-
-        //create square on face?
-
-//        Point2f src_center(aInputFrame.cols()/2.0F, aInputFrame.rows()/2.0F);
-//        Mat rot_mat = getRotationMatrix2D(src_center, angle, 1.0);
-//        Mat dst;
-//        warpAffine(source, dst, rot_mat, source.size());
-
-//        Mat outputImg = new Mat();
-//        return outputImg;
-
-        /* Informative log for debug purposes */
-//        mCapturedFrames++;
-//        if (mCapturedFrames< 100) {
-//            if ((mCapturedFrames % 10) == 0) {
-//                Log.i(TAG, "onCameraFrame. Frame count:" + mCapturedFrames);
-//            }
-//        }
-
-        return InputFrame;
-    }
-
 
 //    BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 //        // OpenCV library is loaded, you may want to perform some actions.
@@ -244,10 +192,16 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
 
     @Override
     public void onCameraViewStarted(int width, int height) {
-        //initialize size?
+        //initialize variable
         mRgba = new Mat(height, width, CvType.CV_8UC3);
         mRgbaF = new Mat(height, width, CvType.CV_8UC3);
         mRgbaT = new Mat(width, width, CvType.CV_8UC3);
+
+
+        mGrayscaleImage = new Mat(height, width, CvType.CV_8UC4);
+
+        // The faces will be a 30% of the height of the screen
+        mAbsoluteFaceSize = (int) (height * FACE_SIZE_PERCENTAGE);
     }
 
     @Override
@@ -257,23 +211,58 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
         mRgbaT.release();
     }
 
-
+    PointF testingPoint = new PointF(0,0);
+    Rect prevFace;
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         //output somehow shows rotated to the left. Function below is to rotate 90 deg clockwise.
         //Update: OpenCV orients the camera to left by 90 degrees. So if the app is
         // in portrait more, camera will be in -90 or 270 degrees orientation.
-        // We fix that in the next and the most important function. There you go!
-
+//
         mRgba = inputFrame.rgba();
         // Rotate mRgba 90 degrees
         Core.transpose(mRgba, mRgbaT);
         Imgproc.resize(mRgbaT, mRgbaF, mRgba.size(), 0, 0, 0);
-        Core.flip(mRgbaF, mRgba, 0);
+        Core.flip(mRgbaF, mRgba, -1);
         mRgbaT.release();
         mRgbaF.release();
-        return CameraView.recognize(mRgba);
-//        return mRgba;
+
+        Imgproc.cvtColor(mRgba, mGrayscaleImage, Imgproc.COLOR_RGBA2GRAY);
+        MatOfRect mFaces = new MatOfRect();
+        Size mMinSize = new Size(mAbsoluteFaceSize, mAbsoluteFaceSize);
+        Size mMaxSize = new Size();
+
+        if (mFaceCascade != null) {
+            mFaceCascade.detectMultiScale(mGrayscaleImage, mFaces, 1.1, 2, 2, mMinSize, mMaxSize);
+        }
+
+        Rect[] facesArray = mFaces.toArray();
+
+
+        if(facesArray.length > 0) {
+            int i = 0;
+            //Face rectangle
+            Imgproc.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), new Scalar(0, 255, 0, 255), 1);
+
+            mPointerView.processMotion(prevFace, facesArray[0]);
+            prevFace = facesArray[0];
+        }else{
+            prevFace = null;
+        }
+
+//        Log.e("CameraView", "TestingPoint is (" + testingPoint.x + "," + testingPoint.y + ").");
+
+
+
+
+        // make sure visible changes are updated
+        mPointerView.postInvalidate();
+
+        return mRgba;
+    }
+
+    public void obtainPointerView(PointerView pointerView) {
+        mPointerView = pointerView;
     }
 }
 

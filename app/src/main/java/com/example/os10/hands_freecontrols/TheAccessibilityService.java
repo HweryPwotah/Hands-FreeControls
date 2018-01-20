@@ -14,7 +14,7 @@ import static android.content.ContentValues.TAG;
 
 public class TheAccessibilityService extends AccessibilityService {
     private static TheAccessibilityService sTheAccessibilityService;
-
+    private MainEngine mEngine;
     OverlayView mOverlayView;
 
     /**
@@ -47,12 +47,13 @@ public class TheAccessibilityService extends AccessibilityService {
     /**
      * Called every time the service is switched ON
      */
-    private MainEngine mEngine;
+
     @Override
     public void onServiceConnected() {
         Log.i(TAG, "onServiceConnected");
         Toast.makeText(this, "Accessibility is granted uyeaayyy !", Toast.LENGTH_SHORT).show();
 
+        sTheAccessibilityService = this;
         if (null == mEngine) mEngine = new MainEngine();
         mEngine.initialize(this);
     }
@@ -62,8 +63,7 @@ public class TheAccessibilityService extends AccessibilityService {
      *
      * @return reference to the accessibility service or null
      */
-    public static @Nullable
-    TheAccessibilityService get() {
+    public static @Nullable TheAccessibilityService get() {
         return sTheAccessibilityService;
     }
 

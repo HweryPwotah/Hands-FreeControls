@@ -12,8 +12,10 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
+import org.opencv.core.Rect;
+
 /**
- * Class that handles user tools such as Dock Panel, Pointer, and Camera (?).
+ * Class that handles Pointer View.
  */
 
 public class PointerView extends View implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -28,6 +30,7 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
 
     public static final String KEY_UI_ELEMENTS_SIZE= "ui_elements_size";
     public static final String KEY_GAMEPAD_TRANSPARENCY= "gamepad_transparency";
+    private float mXAxisBoost, mYAxisBoost;
 
     /**
      *
@@ -100,11 +103,66 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
         mPaintBox.setAlpha(255);
         Log.i("PointerView", "draw pointer");
         canvas.drawBitmap(mPointerBitmap, mPointerLocation.x, mPointerLocation.y, mPaintBox);
+        updatePosition(mPointerLocation);
+
+
     }
 
     public void updatePosition(PointF p) {
         mPointerLocation.x= p.x;
         mPointerLocation.y= p.y;
+    }
+
+    PointF prevPointer = new PointF();
+    PointF currPointer = new PointF();
+
+    PointF mMotion = new PointF();
+    public void processMotion(Rect prevFace, Rect currFace) {
+
+        if (null == prevFace) return;
+
+        mXAxisBoost = 6;
+        mYAxisBoost = 6;
+
+        //get middle point of prevFace
+        prevPointer.x = (float) (prevFace.tl().x + prevFace.br().x) / 2;
+        prevPointer.y = (float) (prevFace.tl().y + prevFace.br().y) / 2;
+
+        //get middle point of currFace
+        currPointer.x = (float) (currFace.tl().x + currFace.br().x) / 2;
+        currPointer.y = (float) (currFace.tl().y + currFace.br().y) / 2;
+
+        //calculate vector
+        mMotion.x = currPointer.x - prevPointer.x;
+        mMotion.y = currPointer.y - prevPointer.y;
+
+        //multiplied to ensure pointer can reach any point in the screen
+        mMotion.x *= mXAxisBoost;
+        mMotion.y *= mYAxisBoost;
+
+        // making sure pointer will not move out from the screen
+        mPointerLocation.x+= mMotion.x;
+        if (mPointerLocation.x< 0) {
+            mPointerLocation.x= 0;
+        }
+        else {
+            int width= this.getWidth();
+            if (mPointerLocation.x>= width)
+                mPointerLocation.x= width - 1;
+        }
+
+        mPointerLocation.y+= mMotion.y;
+        if (mPointerLocation.y< 0) {
+            mPointerLocation.y= 0;
+        }
+        else {
+            int height= this.getHeight();
+            if (mPointerLocation.y>= height)
+                mPointerLocation.y= height - 1;
+        }
+
+        // update pointer location
+        updatePosition(mPointerLocation);
     }
 }
 

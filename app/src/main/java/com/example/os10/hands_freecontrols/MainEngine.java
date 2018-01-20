@@ -2,6 +2,7 @@ package com.example.os10.hands_freecontrols;
 
 import android.app.Service;
 import android.content.pm.PackageManager;
+import android.graphics.PointF;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -13,9 +14,9 @@ public class MainEngine extends AppCompatActivity {
     private static final int REQUEST_CAMERA_PERMISSION = 200;
 
     // Used to load the 'native-lib' library on application startup.
-    static {
-        System.loadLibrary("native-lib");
-    }
+//    static {
+//        System.loadLibrary("native-lib");
+//    }
 
     /* reference to the service which started the engine */
     private Service mService;
@@ -31,7 +32,7 @@ public class MainEngine extends AppCompatActivity {
 
     // layer for drawing the pointer
     private PointerView mPointerView;
-
+    private PointF mPointer= new PointF(0, 0); // avoid creating a new PointF for each frame
 
     static {
         if (!OpenCVLoader.initDebug())
@@ -58,13 +59,14 @@ public class MainEngine extends AppCompatActivity {
         mCameraView = new CameraView(mService);
         mOverlayView.addFullScreenLayer(mCameraView);
 
-        mCameraView.startCamera();
+        mCameraView.startCamera(mService);
 
         //initializing User Interface: Pointer
         Log.i("MainEngine", "Try to initialize PointerView");
         mPointerView = new PointerView(mService);
         mOverlayView.addFullScreenLayer(mPointerView);
 
+        mCameraView.obtainPointerView(mPointerView);
 
         Log.i("MainEngine", "end of initialize");
     }
