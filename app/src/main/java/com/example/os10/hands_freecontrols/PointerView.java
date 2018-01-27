@@ -12,8 +12,6 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 
-import org.opencv.core.Rect;
-
 /**
  * Class that handles Pointer View.
  */
@@ -59,20 +57,18 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
 //        mAlphaPointer= (255 * Preferences.get().getGamepadTransparency()) / 100;
 
         // re-scale pointer accordingly
-        Log.i("PointerView", "declaring pointer");
         BitmapDrawable bd = (BitmapDrawable)
                 ContextCompat.getDrawable(getContext(), R.drawable.pointer);
         Bitmap origBitmap= bd.getBitmap();
         origBitmap.setDensity(Bitmap.DENSITY_NONE);
 
         // desired long side in pixels of the pointer for this screen density
-        Log.i("PointerView", "declaring variables");
+
         float longSide= TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                 CURSOR_LONG_SIDE_DIP, getResources().getDisplayMetrics()) * size;
         float scaling = longSide / (float) bd.getIntrinsicHeight();
         float shortSide= scaling * bd.getIntrinsicWidth();
 
-        Log.i("PointerView", "other settings");
         mPointerBitmap = Bitmap.createScaledBitmap(origBitmap, (int) shortSide, (int) longSide, true);
         mPointerBitmap.setDensity(Bitmap.DENSITY_NONE);
 
@@ -84,7 +80,7 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
     @Override
     public void onDraw(Canvas canvas){
         super.onDraw(canvas);
-        Log.i("PointerView", "onDraw");
+//        Log.i("PointerView", "onDraw");
         // draw progress indicator
 //        if (mClickProgressPercent> 0) {
 //            float radius= ((float)
@@ -101,7 +97,7 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
 
         // draw pointer
         mPaintBox.setAlpha(255);
-        Log.i("PointerView", "draw pointer");
+//        Log.i("PointerView", "draw pointer");
         canvas.drawBitmap(mPointerBitmap, mPointerLocation.x, mPointerLocation.y, mPaintBox);
         updatePosition(mPointerLocation);
 
@@ -111,30 +107,20 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
     public void updatePosition(PointF p) {
         mPointerLocation.x= p.x;
         mPointerLocation.y= p.y;
+//        Log.i("PointerView", "pointer is at (" + mPointerLocation.x + ", " + mPointerLocation.y + ")");
     }
 
     PointF prevPointer = new PointF();
     PointF currPointer = new PointF();
 
     PointF mMotion = new PointF();
-    public void processMotion(Rect prevFace, Rect currFace) {
+    public void MovePointer(PointF mMotion) {
 
-        if (null == prevFace) return;
+//        if (null == prevFace) return;
 
         mXAxisBoost = 6;
         mYAxisBoost = 6;
 
-        //get middle point of prevFace
-        prevPointer.x = (float) (prevFace.tl().x + prevFace.br().x) / 2;
-        prevPointer.y = (float) (prevFace.tl().y + prevFace.br().y) / 2;
-
-        //get middle point of currFace
-        currPointer.x = (float) (currFace.tl().x + currFace.br().x) / 2;
-        currPointer.y = (float) (currFace.tl().y + currFace.br().y) / 2;
-
-        //calculate vector
-        mMotion.x = currPointer.x - prevPointer.x;
-        mMotion.y = currPointer.y - prevPointer.y;
 
         //multiplied to ensure pointer can reach any point in the screen
         mMotion.x *= mXAxisBoost;

@@ -28,15 +28,6 @@ public class LauncherActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_launcher);
-
-//        Button About = (Button) findViewById(R.id.About);
-//        About.setOnClickListener(this);
-
-        //change CameraView size.
-//        mOpenCvCameraView.getHolder().setFixedSize(250, 250);
-//        mOpenCvCameraView.setMaxFrameSize(500,500);
-
-//        b_OpenCamera.setOnClickListener(MainEngine.this);
     }
 
     public void OpenNavigation(View view){

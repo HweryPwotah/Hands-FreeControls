@@ -71,37 +71,6 @@ public class MainEngine extends AppCompatActivity {
         Log.i("MainEngine", "end of initialize");
     }
 
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        Log.i(TAG, "onCreate");
-//        super.onCreate(savedInstanceState);
-//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-//        setContentView(R.layout.activity_main);
-//    }
-//
-//    @Override
-//    protected void onResume() {
-//        Log.e(TAG, "onResume");
-//        super.onResume();
-//    }
-//
-//    @Override
-//    protected void onPause() {
-//        Log.e(TAG, "onPause");
-//        //closeCamera();
-////        stopBackgroundThread();
-//        super.onPause();
-////        if (mOpenCvCameraView != null)
-////            mOpenCvCameraView.disableView();
-//    }
-//
-//    public void onDestroy() {
-//        super.onDestroy();
-//        Log.e(TAG, "onDestroy");
-////        if (mOpenCvCameraView != null)
-////            mOpenCvCameraView.disableView();
-//    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
