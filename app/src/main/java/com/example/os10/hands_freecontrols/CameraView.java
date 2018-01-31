@@ -66,8 +66,9 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
 
     private int mAbsoluteFaceSize;
     private static final float FACE_SIZE_PERCENTAGE = 0.3f;
-    private PointerView mPointerView;
+    private PointF mPointerMotion;
 
+    private MainEngine mainEngine;
     //    SurfaceView getCameraSurface(){
 //        return mCameraView;
 //    }
@@ -76,8 +77,9 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
      * Camera constructor
      *
      * @param c Context
+     * @param mEngine
      */
-    public CameraView(@NonNull Context c) {
+    public CameraView(@NonNull Context c, MainEngine mEngine) {
         super(c);
         //initializing OpenCV
 //        if (!OpenCVLoader.initDebug()) {
@@ -92,6 +94,7 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
             throw new RuntimeException("Cannot initialize OpenCV");
         }
 
+        mainEngine = mEngine;
 
         Resources r = getResources();
 
@@ -234,7 +237,6 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
 
     int mCurrCornerCount = 0;
 
-    //    boolean FirstFrame = true;
     Rect mFaceLocation = new Rect();
     Rect mFaceFeature = new Rect();
 
@@ -278,7 +280,6 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
             TermCriteria termCrit = new TermCriteria(TermCriteria.MAX_ITER + TermCriteria.EPS, 20, 0.03);
             Imgproc.cornerSubPix(mPrevFaceLocation, mCorners2f, new Size(5, 5), new Size(-1, -1), termCrit);
 
-//          mCurrCorners.fromArray(mCorners2f.toArray());
             mArrCurrCorners = mCorners2f.toArray();
             mCurrCornerCount = mArrCurrCorners.length;
 
@@ -362,11 +363,13 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
         mMotion.x = xVel;
         mMotion.y = yVel;
 
-        mPointerView.MovePointer(mMotion);
-        mPointerView.postInvalidate();
+//        setPointerMotion(mMotion);
+//        mPointerMotion = mCameraView.getPointerMotion();
+
+        mainEngine.processMotion(mMotion);
+
         mCurrGrayImg.copyTo(mPrevGrayImg);
         return mRgba;
-
     }
 
     private Rect isFaceDetected(Mat img) {
@@ -393,9 +396,9 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
         return mFace;
     }
 
-    public void obtainPointerView(PointerView pointerView) {
-        mPointerView = pointerView;
-    }
+//    public void obtainPointerView(PointerView pointerView) {
+//        mPointerView = pointerView;
+//    }
 
     private void drawCross(Mat inputFrame, Point p, Scalar color) {
         int thickness = 2;
@@ -472,4 +475,13 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
             drawCross(InputFrame, corners[i], color);
         }
     }
+
+    public void setPointerMotion(PointF PointerMotion) {
+        mPointerMotion = PointerMotion;
+    }
+
+    public PointF getPointerMotion() {
+        return mPointerMotion;
+    }
+
 }

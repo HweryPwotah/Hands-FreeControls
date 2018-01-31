@@ -1,7 +1,9 @@
 package com.example.os10.hands_freecontrols;
 
+import android.accessibilityservice.AccessibilityService;
 import android.app.Service;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -13,11 +15,6 @@ import org.opencv.android.OpenCVLoader;
 public class MainEngine extends AppCompatActivity {
     private static final int REQUEST_CAMERA_PERMISSION = 200;
 
-    // Used to load the 'native-lib' library on application startup.
-//    static {
-//        System.loadLibrary("native-lib");
-//    }
-
     /* reference to the service which started the engine */
     private Service mService;
 
@@ -25,6 +22,7 @@ public class MainEngine extends AppCompatActivity {
     private OverlayView mOverlayView;
     private CameraView mCameraView;
     private DockPanelView mDockPanelView;
+    private ClickEngine mClickEngine;
 
     protected OverlayView getOverlayView() {
         return mOverlayView;
@@ -32,7 +30,7 @@ public class MainEngine extends AppCompatActivity {
 
     // layer for drawing the pointer
     private PointerView mPointerView;
-    private PointF mPointer= new PointF(0, 0); // avoid creating a new PointF for each frame
+//    private PointF mPointer= new PointF(0, 0); // avoid creating a new PointF for each frame
 
     static {
         if (!OpenCVLoader.initDebug())
@@ -41,9 +39,9 @@ public class MainEngine extends AppCompatActivity {
             Log.d("SUCCESS", "OpenCV loaded");
     }
 
-    public void initialize(@NonNull Service service){
+    public void initialize(@NonNull Service service) {
         mService = service;
-        if (Preferences.initForA11yService(this) == null) return;
+//        if (Preferences.initForA11yService(this) == null) return;
 
         //initializing User Interface: ViewGroup
         Log.i("MainEngine", "Try to initialize OverlayView");
@@ -56,7 +54,7 @@ public class MainEngine extends AppCompatActivity {
 
         //Initializing User Interface: Dock Panel
         Log.i("MainEngine", "Try to initialize CameraView");
-        mCameraView = new CameraView(mService);
+        mCameraView = new CameraView(mService, this);
         mOverlayView.addFullScreenLayer(mCameraView);
 
         mCameraView.startCamera(mService);
@@ -66,9 +64,9 @@ public class MainEngine extends AppCompatActivity {
         mPointerView = new PointerView(mService);
         mOverlayView.addFullScreenLayer(mPointerView);
 
-        mCameraView.obtainPointerView(mPointerView);
-
+        mClickEngine = new ClickEngine((AccessibilityService) mService, mDockPanelView);
         Log.i("MainEngine", "end of initialize");
+
     }
 
     @Override
@@ -80,5 +78,23 @@ public class MainEngine extends AppCompatActivity {
                 finish();
             }
         }
+    }
+
+    public void processMotion(PointF mMotion) {
+        mPointerView.MovePointer(mMotion);
+
+        PointF mPointerLocation = mPointerView.getPointerLocation();
+        boolean clickGenerated = false;
+        clickGenerated= mClickEngine.updatePointerLocation(mPointerLocation);
+
+        mPointerView.updateClickProgress(mClickEngine.getClickProgressPercent());
+
+        mPointerView.postInvalidate();
+
+        Point pointer = new Point();
+        pointer.x = (int) mPointerLocation.x;
+        pointer.y = (int) mPointerLocation.y;
+
+        mClickEngine.onMouseEvent(pointer, clickGenerated);
     }
 }
