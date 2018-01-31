@@ -21,7 +21,7 @@
     <string name="dock_notifications_button">Notifications button</string>
     <string name="dock_menu_button">Expand/collapse dock menu</string>
     <string name="dock_softkeyboard_button">Open keyboard</string>
-    <string name="dock_toggle_context_menu">Toggle pointer Context Menu</string>
+    <string name="dock_toggle_swipe_mode">Toggle Swipe Mode</string>
     <string name="dock_toggle_rest_mode">Toggle Rest mode. To disable automatic clicks while you read or watch a video, for instance.</string>
     <!-- dock panel end -->
 </resources>

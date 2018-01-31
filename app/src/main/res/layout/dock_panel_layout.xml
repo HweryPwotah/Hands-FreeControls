@@ -52,7 +52,7 @@
         android:layout_width="35dip"
         android:layout_height="35dip"
         android:padding="2dip"
-        android:src="@drawable/ic_overview"
+        android:src="@drawable/ic_recents"
         android:background="@color/transparent"
         android:scaleType="fitCenter"
         android:contentDescription="@string/dock_recents_button" />
@@ -67,24 +67,15 @@
         android:scaleType="fitCenter"
         android:contentDescription="@string/dock_notifications_button" />
 
-    <!--<ImageButton-->
-        <!--android:id="@+id/softkeyboard_button"-->
-        <!--android:layout_width="35dip"-->
-        <!--android:layout_height="35dip"-->
-        <!--android:padding="2dip"-->
-        <!--android:src="@drawable/ic_keyboard"-->
-        <!--android:background="@color/transparent"-->
-        <!--android:scaleType="fitCenter"-->
-        <!--android:contentDescription="@string/dock_softkeyboard_button" />-->
-
-    <!--<ImageButton-->
-        <!--android:id="@+id/toggle_context_menu"-->
-        <!--android:layout_width="35dip"-->
-        <!--android:layout_height="35dip"-->
-        <!--android:padding="2dip"-->
-        <!--android:background="@color/transparent"-->
-        <!--android:scaleType="fitCenter"-->
-        <!--android:contentDescription="@string/dock_toggle_context_menu" />-->
+    <ImageButton
+        android:id="@+id/toggle_swipe_mode"
+        android:layout_width="35dip"
+        android:layout_height="35dip"
+        android:padding="2dip"
+        android:src="@drawable/ic_swipe_off"
+        android:background="@color/transparent"
+        android:scaleType="fitCenter"
+        android:contentDescription="@string/dock_toggle_swipe_mode" />
 
     <!--<ImageButton-->
         <!--android:id="@+id/toggle_rest_mode"-->

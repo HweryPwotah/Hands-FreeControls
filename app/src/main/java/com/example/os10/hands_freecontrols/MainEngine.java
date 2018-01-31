@@ -64,7 +64,7 @@ public class MainEngine extends AppCompatActivity {
         mPointerView = new PointerView(mService);
         mOverlayView.addFullScreenLayer(mPointerView);
 
-        mClickEngine = new ClickEngine((AccessibilityService) mService, mDockPanelView);
+        mClickEngine = new ClickEngine((AccessibilityService) mService, mDockPanelView, mPointerView);
         Log.i("MainEngine", "end of initialize");
 
     }

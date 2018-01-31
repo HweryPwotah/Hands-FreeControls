@@ -32,6 +32,7 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
     public static final String KEY_UI_ELEMENTS_SIZE = "ui_elements_size";
     public static final String KEY_GAMEPAD_TRANSPARENCY = "gamepad_transparency";
     private int mClickProgressPercent = 0;
+    private boolean mSwipemodeEnabled;
 
     /**
      * Constructor for initializing Pointer
@@ -92,6 +93,10 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
         canvas.drawArc(progressCircle, 0, mProgress, true, mPaintBox);
 
         updatePosition(mPointerLocation);
+
+        if (mSwipemodeEnabled) {
+            canvas.drawLine(mSwipeLocation.x, mSwipeLocation.y, mPointerLocation.x, mPointerLocation.y, mPaintBox);
+        }
     }
 
     public void updatePosition(PointF p) {
@@ -99,7 +104,15 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
         mPointerLocation.y = p.y;
     }
 
+    PointF mSwipeLocation = new PointF();
+    public void saveSwipeLocation(){
+        mSwipeLocation.x = mPointerLocation.x;
+        mSwipeLocation.y = mPointerLocation.y;
+        mSwipemodeEnabled = true;
+    }
+
     public void MovePointer(PointF mMotion) {
+
         //adjust pointer speed
         float mXAxisBoost = 9;
         float mYAxisBoost = 9;
@@ -125,7 +138,6 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
             if (mPointerLocation.y >= height)
                 mPointerLocation.y = height - 1;
         }
-
         // update pointer location
 //        updatePosition(mPointerLocation);
     }
@@ -136,7 +148,7 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
     }
 
     public void updateClickProgress(int percent) {
-        mClickProgressPercent= percent;
+        mClickProgressPercent = percent;
     }
 
     public void setCenter() {
@@ -144,6 +156,12 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
         mPointerLocation.x = Resources.getSystem().getDisplayMetrics().widthPixels / 2;
         mPointerLocation.y = Resources.getSystem().getDisplayMetrics().heightPixels / 2;
         Log.i("PointerView", "Pointer location: " + mPointerLocation.x + ", " + mPointerLocation.y);
+    }
+
+    public void disableSwipeMode() {
+        mSwipeLocation.x = 0;
+        mSwipeLocation.y = 0;
+        mSwipemodeEnabled = false;
     }
 }
 

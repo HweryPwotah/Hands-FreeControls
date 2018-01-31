@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ import java.util.List;
 class ClickEngine {
     private final AccessibilityService mAccessibilityService;
     private final DockPanelView mDockPanelView;
+    private final PointerView mPointerView;
 
     /**
      * Enums and constants
@@ -43,11 +45,12 @@ class ClickEngine {
     // to remember previous pointer location and measure traveled distance
     private PointF mPrevPointerLocation = new PointF();
 
-    ClickEngine(@NonNull AccessibilityService c, DockPanelView dockPanelView) {
+    ClickEngine(@NonNull AccessibilityService c, DockPanelView dockPanelView, PointerView pointerView) {
         // get constants from resources
 //        Resources r= c.getResources();
         mAccessibilityService = c;
         mDockPanelView = dockPanelView;
+        mPointerView = pointerView;
 
         DWELL_TIME_DEFAULT = 10 * 100; //10 seconds
         DWELL_AREA_DEFAULT = 7;
@@ -156,54 +159,102 @@ class ClickEngine {
         return mTimer.getElapsedPercent();
     }
 
+    boolean fromTo = false;
+    Point prevPoint = new Point();
+    AccessibilityNodeInfo root;
+
     void onMouseEvent(Point pInt, boolean clickGenerated) {
         if (!clickGenerated) return;
-//        Log.i("ClickEngine", "Pointer is on : (" + pInt.x + ", " + pInt.y + ")");
+
+        AccessibilityNodeInfo node;
+
+        int mAction;
 
         // TODO: 1/29/2018
         //check if clicked item is one of dock panel buttons. if yes, handle button functions
         if (HandleDockPanel(pInt)) return;
 
-        AccessibilityNodeInfo root;// = null;
-//        List<AccessibilityWindowInfo> l = mAccessibilityService.getWindows();
-//        Rect bounds = new Rect();
-//        for (AccessibilityWindowInfo awi : l) {
-//            awi.getBoundsInScreen(bounds);
-//            if (bounds.contains(pInt.x, pInt.y)) {
-//                AccessibilityNodeInfo rootCandidate = awi.getRoot();
-//                if (rootCandidate == null) continue;
-//                        /*
-//                          Check bounds for the candidate root node. Sometimes windows bounds
-//                           are larger than root bounds
-//                         */
-//                rootCandidate.getBoundsInScreen(bounds);
-//                if (bounds.contains(pInt.x, pInt.y)) {
-//                    root = rootCandidate;
-//                    break;
-//                }
-//            }
-//        }
+        switch (mSwipeMode) {
+            case 0: //swipe mode is in OFF condition
+                root = null;
+                root = mAccessibilityService.getRootInActiveWindow();
+                if (root == null) return;
+
+                //find node under pointer location
+                node = getConcernedNodes(pInt, root, AccessibilityAction.ACTION_CLICK);
+                if (node == null) return;
+
+                mAction = AccessibilityAction.ACTION_CLICK.getId();
+                node.performAction(mAction);
+                break;
+            case 1:
+            case 2: //swipe mode is in ON condition
+                if (!fromTo) { //FROM : capture the "from" point
+                    Log.i("ClickEngine", "onMouseEvent: FROM");
+                    root = null;
+                    prevPoint.x = pInt.x;
+                    prevPoint.y = pInt.y;
+                    fromTo = true;
+                    mPointerView.saveSwipeLocation();
+                } else { //TO : capture the two point, and do swipe
+                    Log.i("ClickEngine", "onMouseEvent: TO");
+                    root = mAccessibilityService.getRootInActiveWindow();
+                    if (root == null) return;
+                    AccessibilityAction AccAction = CheckDirection(prevPoint, pInt);
+                    //find node under pointer location
+                    node = getConcernedNodes(prevPoint, root, AccAction);
+                    if (node == null) {
+                        Log.i("ClickEngine", "onMouseEvent: error report 209 node null");
+                    } else {
+                        mAction = AccAction.getId();
+                        node.performAction(mAction);
+                    }
+                    mPointerView.disableSwipeMode();
+                    prevPoint.x = 0;
+                    prevPoint.y = 0;
+                    fromTo = false;
+                    if (mSwipeMode == 1) { //if swipe mode is in ON - ONCE condition
+                        mSwipeMode = 0;
+                        mDockPanelView.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                mDockPanelView.updateSwipeButton(mSwipeMode);
+                            }
+                        });
+                    }
+                }
+                break;
+//            case 2: //swipe mode is in ON - ALWAYS condition
+//                if (!fromTo){ //FROM : capture the "from" point
 //
-//        if (root == null) {
-//            Log.e("ClickEngine", "Error code: #01 root is null");
-            root = mAccessibilityService.getRootInActiveWindow();
-            if (root == null) {
-                Log.e("ClickEngine", "Error code: #02 root in active window is null");
-                return;
-            }
-//        }
-
-        //find node under pointer location
-        AccessibilityNodeInfo node = getConcernedNodes(pInt, root);
-
-        if (node == null) {
-            Log.e("ClickEngine", "Error code: #03 node found is null");
-            return;
+//                }else{ //TO : capture the two point, and do swipe
+//
+//                }
+//
+//                node.performAction(mAction);
+//                break;
         }
 
-        int mAction = AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK.getId();
-        node.performAction(mAction);
+
+//        node.performAction(mAction);
     }
+
+    private AccessibilityAction CheckDirection(Point prevPoint, Point currPoint) {
+        int x, y;
+
+        x = currPoint.x - prevPoint.x;
+        y = currPoint.y - prevPoint.y;
+
+        if (Math.abs(x) >= Math.abs(y)) {
+            if (x > 0) return AccessibilityAction.ACTION_SCROLL_FORWARD;
+            else return AccessibilityAction.ACTION_SCROLL_BACKWARD;
+        } else {
+            if (y > 0) return AccessibilityAction.ACTION_SCROLL_BACKWARD;
+            else return AccessibilityAction.ACTION_SCROLL_FORWARD;
+        }
+    }
+
+    private int mSwipeMode = 0;
 
     private boolean HandleDockPanel(Point point) {
         //check whether the click is on dock panel or not
@@ -224,18 +275,39 @@ class ClickEngine {
             case R.id.notifications_button:
                 mAccessibilityService.performGlobalAction(AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS);
                 break;
-            /*
-            case R.id.swipemode_button:
-                mAccessibilityService.performGlobalAction(AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS);
-                change state from click mode to swipe mode
+            case R.id.toggle_swipe_mode:
+                //change state from click mode to swipe mode
+                mSwipeMode++;
+                if (mSwipeMode > 2) mSwipeMode = 0;
+//                mDockPanelView.setSwipeMode(mSwipeMode);
+                mDockPanelView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mDockPanelView.updateSwipeButton(mSwipeMode);
+                    }
+                });
                 break;
-             */
         }
+
         return true;
     }
 
-    private AccessibilityNodeInfo getConcernedNodes(Point point, AccessibilityNodeInfo root) {
-        RecursionInfo ri = new RecursionInfo(point);
+    /**
+     * Class to store information across recursive calls
+     */
+    private static class RecursionInfo {
+        final Point p;
+        final Rect bounds = new Rect();
+        AccessibilityAction action;
+
+        RecursionInfo(Point p, AccessibilityAction action) {
+            this.p = p;
+            this.action = action;
+        }
+    }
+
+    private AccessibilityNodeInfo getConcernedNodes(Point point, AccessibilityNodeInfo root, AccessibilityAction action) {
+        RecursionInfo ri = new RecursionInfo(point, action);
         return getConcernedNodes0(root, ri);
     }
 
@@ -247,9 +319,9 @@ class ClickEngine {
         node.getBoundsInScreen(ri.bounds);
         if (!ri.bounds.contains(ri.p.x, ri.p.y)) return null;
 
-        ri.actionList = node.getActionList();
-        for (AccessibilityNodeInfo.AccessibilityAction x : ri.actionList){
-            if (x == AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK) nodeResult = node;
+        List<AccessibilityAction> actionList = node.getActionList();
+        for (AccessibilityAction x : actionList) {
+            if (x == ri.action) nodeResult = node;
         }
 
         //check if the node has anymore child. if yes, explore
@@ -261,16 +333,4 @@ class ClickEngine {
         return nodeResult;
     }
 
-    /**
-     * Class to store information across recursive calls
-     */
-    private static class RecursionInfo {
-        final Point p;
-        final Rect bounds = new Rect();
-        List<AccessibilityNodeInfo.AccessibilityAction> actionList;
-
-        RecursionInfo(Point p) {
-            this.p = p;
-        }
-    }
 }

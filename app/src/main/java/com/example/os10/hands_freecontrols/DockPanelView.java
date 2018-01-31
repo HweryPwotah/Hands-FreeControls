@@ -2,10 +2,12 @@ package com.example.os10.hands_freecontrols;
 
 import android.content.Context;
 import android.graphics.Point;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
@@ -17,16 +19,17 @@ public class DockPanelView extends RelativeLayout {
     // the docking panel
     private LinearLayout mDockPanelView;
 
+
     /**
-     *
      * Constructor : for initialization purposes, drawing dock panel.
+     *
      * @param c Context
      */
     public DockPanelView(Context c) {
         super(c);
 //        SharedPreferences sp= Preferences.get().getSharedPreferences();
 //        sp.registerOnSharedPreferenceChangeListener(this);
-        int gravity= Gravity.START;
+        int gravity = Gravity.START;
         float size = 1;//Preferences.get().getUIElementsSize();
 
         if (mDockPanelView != null) {
@@ -35,7 +38,7 @@ public class DockPanelView extends RelativeLayout {
 
         //Container view
         mDockPanelView = new LinearLayout(c);
-        RelativeLayout.LayoutParams lp= new RelativeLayout.LayoutParams(
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
                 RelativeLayout.LayoutParams.WRAP_CONTENT,
                 RelativeLayout.LayoutParams.WRAP_CONTENT);
 
@@ -45,7 +48,7 @@ public class DockPanelView extends RelativeLayout {
 
         //Panel Button
         LayoutInflater inflater = LayoutInflater.from(c);
-        LinearLayout contents= (LinearLayout)
+        LinearLayout contents = (LinearLayout)
                 inflater.inflate(R.layout.dock_panel_layout, mDockPanelView, false);
         contents.setOrientation(LinearLayout.VERTICAL);
 
@@ -55,7 +58,7 @@ public class DockPanelView extends RelativeLayout {
     }
 
     public int getViewID(Point point) {
-        View result= getConcernedView0(point, mDockPanelView);
+        View result = getConcernedView0(point, mDockPanelView);
         if (result == null) return View.NO_ID;
 
         return result.getId();
@@ -70,11 +73,11 @@ public class DockPanelView extends RelativeLayout {
         }
 
         // is a ViewGroup, iterate children
-        ViewGroup vg= (ViewGroup) v;
+        ViewGroup vg = (ViewGroup) v;
 
-        int childCount= vg.getChildCount();
+        int childCount = vg.getChildCount();
 
-        for (int i= 0; i< childCount; i++) {
+        for (int i = 0; i < childCount; i++) {
             View result = getConcernedView0(p, vg.getChildAt(i));
             if (result != null) return result;
         }
@@ -95,4 +98,21 @@ public class DockPanelView extends RelativeLayout {
                         location[1] + view.getHeight() < p.y);
     }
 
+    public void updateSwipeButton(int SwipeMode) {
+        ImageButton ib = (ImageButton) mDockPanelView.findViewById(R.id.toggle_swipe_mode);
+        switch (SwipeMode) {
+            case 0:
+                ib.setImageResource(R.drawable.ic_swipe_off);
+                Log.i("DockPanelView", "updateSwipeButton: swipe = off");
+                break;
+            case 1:
+                ib.setImageResource(R.drawable.ic_swipe_once);
+                Log.i("DockPanelView", "updateSwipeButton: swipe = on once");
+                break;
+            case 2:
+                ib.setImageResource(R.drawable.ic_swipe_always);
+                Log.i("DockPanelView", "updateSwipeButton: swipe = on always");
+                break;
+        }
+    }
 }
