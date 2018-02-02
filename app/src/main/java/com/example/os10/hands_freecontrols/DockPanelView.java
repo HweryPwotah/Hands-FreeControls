@@ -2,7 +2,6 @@ package com.example.os10.hands_freecontrols;
 
 import android.content.Context;
 import android.graphics.Point;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 /**
  * Class that handles Dock Panel
@@ -19,7 +19,6 @@ public class DockPanelView extends RelativeLayout {
     // the docking panel
     private LinearLayout mDockPanelView;
 
-
     /**
      * Constructor : for initialization purposes, drawing dock panel.
      *
@@ -27,10 +26,8 @@ public class DockPanelView extends RelativeLayout {
      */
     public DockPanelView(Context c) {
         super(c);
-//        SharedPreferences sp= Preferences.get().getSharedPreferences();
-//        sp.registerOnSharedPreferenceChangeListener(this);
         int gravity = Gravity.START;
-        float size = 1;//Preferences.get().getUIElementsSize();
+        float size = 1;
 
         if (mDockPanelView != null) {
             removeView(mDockPanelView);
@@ -57,6 +54,12 @@ public class DockPanelView extends RelativeLayout {
         addView(mDockPanelView);
     }
 
+    /**
+     * get dock panel button below the point "point" and returns the button
+     *
+     * @param point pointer location
+     * @return return button found below point. Null for not found
+     */
     public int getViewID(Point point) {
         View result = getConcernedView0(point, mDockPanelView);
         if (result == null) return View.NO_ID;
@@ -64,6 +67,13 @@ public class DockPanelView extends RelativeLayout {
         return result.getId();
     }
 
+    /**
+     * go through the view recursively to find the node below point
+     *
+     * @param p pointer location
+     * @param v view
+     * @return return button flow below point. Null for not found
+     */
     public static View getConcernedView0(Point p, View v) {
         if (v.getVisibility() != View.VISIBLE) return null;
         if (!isPointInsideView(p, v)) return null;
@@ -85,6 +95,13 @@ public class DockPanelView extends RelativeLayout {
         return null;
     }
 
+    /**
+     * check whether or not the point p is inside the view v
+     *
+     * @param p    point
+     * @param view view
+     * @return boolean
+     */
     public static boolean isPointInsideView(Point p, View view) {
         if (view == null) return false;
 
@@ -98,21 +115,30 @@ public class DockPanelView extends RelativeLayout {
                         location[1] + view.getHeight() < p.y);
     }
 
+    /**
+     * handles dock panel swipe button mode (off, on once, on always)
+     *
+     * @param SwipeMode 0 for off, 1 for once, 2 for always
+     */
     public void updateSwipeButton(int SwipeMode) {
         ImageButton ib = (ImageButton) mDockPanelView.findViewById(R.id.toggle_swipe_mode);
         switch (SwipeMode) {
             case 0:
                 ib.setImageResource(R.drawable.ic_swipe_off);
-                Log.i("DockPanelView", "updateSwipeButton: swipe = off");
+                Toast.makeText(getContext(), "Swipe Mode off.", Toast.LENGTH_SHORT).show();
+//                Log.i("DockPanelView", "updateSwipeButton: swipe = off");
                 break;
             case 1:
                 ib.setImageResource(R.drawable.ic_swipe_once);
-                Log.i("DockPanelView", "updateSwipeButton: swipe = on once");
+                Toast.makeText(getContext(), "Swipe Mode on.", Toast.LENGTH_SHORT).show();
+//                Log.i("DockPanelView", "updateSwipeButton: swipe = on once");
                 break;
             case 2:
                 ib.setImageResource(R.drawable.ic_swipe_always);
-                Log.i("DockPanelView", "updateSwipeButton: swipe = on always");
+                Toast.makeText(getContext(), "Swipe Mode always.", Toast.LENGTH_SHORT).show();
+//                Log.i("DockPanelView", "updateSwipeButton: swipe = on always");
                 break;
         }
     }
+
 }

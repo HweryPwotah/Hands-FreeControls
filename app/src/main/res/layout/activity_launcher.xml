@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_below="@+id/linearLayout2"
-        android:layout_weight="0.21"
+        android:layout_weight="0.72"
         android:text="Open Navigation"
         android:onClick="OpenNavigation"/>
 
@@ -27,20 +27,11 @@
         android:layout_weight="0.23">
 
         <Button
-            android:id="@+id/Settings"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1.50"
-            android:text="Settings"
-            android:onClick="navigateToSettings"/>
-
-        <Button
             android:id="@+id/About"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1.50"
-            android:text="About"
-            android:onClick="navigateToAbout"/>
+            android:layout_width="match_parent"
+            android:layout_height="83dp"
+            android:onClick="navigateToAbout"
+            android:text="About" />
     </LinearLayout>
 
 </LinearLayout>

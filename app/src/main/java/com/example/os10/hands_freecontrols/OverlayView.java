@@ -2,6 +2,7 @@ package com.example.os10.hands_freecontrols;
 
 import android.content.Context;
 import android.graphics.PixelFormat;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,14 +14,14 @@ import android.widget.RelativeLayout;
  * Class that creates user interface for tools such as: Dock Panel, Pointer, and Camera (?).
  */
 
-public class OverlayView extends RelativeLayout{
-    private static final String TAG = "OverlayView";
-//    FrameLayout mLayout;
-
+public class OverlayView extends RelativeLayout {
+    /**
+     * constructor for Overlay View. Create a view which overlays the user screen.
+     *
+     * @param c context
+     */
     OverlayView(Context c) {
         super(c);
-
-//        mLayout = new FrameLayout(c);
 
         WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams();
 
@@ -51,23 +52,27 @@ public class OverlayView extends RelativeLayout{
         layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT;
         layoutParams.height = WindowManager.LayoutParams.MATCH_PARENT;
 
-        WindowManager wm= (WindowManager) c.getSystemService(Context.WINDOW_SERVICE);
+        WindowManager wm = (WindowManager) c.getSystemService(Context.WINDOW_SERVICE);
         wm.addView(this, layoutParams);
     }
-//    void cleanup() {
-//        WindowManager wm= (WindowManager) this.getContext().getSystemService(Context.WINDOW_SERVICE);
-//        wm.removeViewImmediate(this);
-//
-//        Log.i(TAG, "OverlayView: finish destroyOverlay");
-//    }
 
-    public void addFullScreenLayer (View v) {
-        RelativeLayout.LayoutParams lp= new RelativeLayout.LayoutParams(this.getWidth(), this.getHeight());
-        lp.width= RelativeLayout.LayoutParams.MATCH_PARENT;
-        lp.height= RelativeLayout.LayoutParams.MATCH_PARENT;
+    /**
+     * add the view v to the user screen overlay
+     *
+     * @param v view
+     */
+    public void addFullScreenLayer(View v) {
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(this.getWidth(), this.getHeight());
+        lp.width = RelativeLayout.LayoutParams.MATCH_PARENT;
+        lp.height = RelativeLayout.LayoutParams.MATCH_PARENT;
 
         v.setLayoutParams(lp);
         this.addView(v);
+    }
+
+    public void terminate() {
+        WindowManager wm = (WindowManager) this.getContext().getSystemService(Context.WINDOW_SERVICE);
+        wm.removeViewImmediate(this);
     }
 }
 

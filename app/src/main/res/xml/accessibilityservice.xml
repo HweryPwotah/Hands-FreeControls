@@ -3,7 +3,6 @@
     android:accessibilityFeedbackType="feedbackSpoken"
     android:notificationTimeout="0"
     android:description="@string/service_description"
-    android:settingsActivity="com.example.os10.hands_freecontrols.SettingsActivity"
     android:canRetrieveWindowContent="true"
     android:accessibilityFlags="flagDefault|flagRequestEnhancedWebAccessibility"
     android:canRequestEnhancedWebAccessibility="true"

@@ -6,6 +6,7 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -45,20 +46,22 @@ class ClickEngine {
     // to remember previous pointer location and measure traveled distance
     private PointF mPrevPointerLocation = new PointF();
 
+    /**
+     * constructor for Click Engine.
+     *
+     * @param c             accessibility service
+     * @param dockPanelView dock panel view
+     * @param pointerView   pointer view
+     */
     ClickEngine(@NonNull AccessibilityService c, DockPanelView dockPanelView, PointerView pointerView) {
-        // get constants from resources
-//        Resources r= c.getResources();
         mAccessibilityService = c;
         mDockPanelView = dockPanelView;
         mPointerView = pointerView;
 
-        DWELL_TIME_DEFAULT = 10 * 100; //10 seconds
+        DWELL_TIME_DEFAULT = 3 * 1000; //3 seconds
         DWELL_AREA_DEFAULT = 7;
 
         mTimer = new Timer(DWELL_TIME_DEFAULT);
-
-        // register preference change listener
-//        Preferences.get().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
 
         ClickEngineInitialization();
 
@@ -72,26 +75,10 @@ class ClickEngine {
     }
 
     private void ClickEngineInitialization() {
-//        SharedPreferences sp=  Preferences.get().getSharedPreferences();
-        // get values from shared resources
-        int dwellTime = DWELL_TIME_DEFAULT;
-        mTimer.setTimer(dwellTime);
+        mTimer.setTimer(DWELL_TIME_DEFAULT);
         int dwellArea = DWELL_AREA_DEFAULT;
         mDwellAreaSquared = dwellArea * dwellArea;
     }
-
-//    public void cleanup() {
-//        Preferences.get().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
-//    }
-
-//    @Override
-//    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
-//                                          String key) {
-//        if (key.equals(Preferences.KEY_DWELL_TIME) || key.equals(Preferences.KEY_DWELL_AREA) ||
-//                key.equals(Preferences.KEY_CONSECUTIVE_CLICKS)) {
-//            updateSettings();
-//        }
-//    }
 
     private boolean movedAboveThreshold(PointF p1, PointF p2) {
         float dx = p1.x - p2.x;
@@ -202,7 +189,7 @@ class ClickEngine {
                     if (root == null) return;
                     AccessibilityAction AccAction = CheckDirection(prevPoint, pInt);
                     //find node under pointer location
-                    node = getConcernedNodes(prevPoint, root, AccAction);
+                    node = getConcernedNodes(prevPoint, pInt, root, AccAction);
                     if (node == null) {
                         Log.i("ClickEngine", "onMouseEvent: error report 209 node null");
                     } else {
@@ -224,19 +211,7 @@ class ClickEngine {
                     }
                 }
                 break;
-//            case 2: //swipe mode is in ON - ALWAYS condition
-//                if (!fromTo){ //FROM : capture the "from" point
-//
-//                }else{ //TO : capture the two point, and do swipe
-//
-//                }
-//
-//                node.performAction(mAction);
-//                break;
         }
-
-
-//        node.performAction(mAction);
     }
 
     private AccessibilityAction CheckDirection(Point prevPoint, Point currPoint) {
@@ -246,8 +221,8 @@ class ClickEngine {
         y = currPoint.y - prevPoint.y;
 
         if (Math.abs(x) >= Math.abs(y)) {
-            if (x > 0) return AccessibilityAction.ACTION_SCROLL_FORWARD;
-            else return AccessibilityAction.ACTION_SCROLL_BACKWARD;
+            if (x > 0) return AccessibilityAction.ACTION_SCROLL_BACKWARD;
+            else return AccessibilityAction.ACTION_SCROLL_FORWARD;
         } else {
             if (y > 0) return AccessibilityAction.ACTION_SCROLL_BACKWARD;
             else return AccessibilityAction.ACTION_SCROLL_FORWARD;
@@ -279,7 +254,6 @@ class ClickEngine {
                 //change state from click mode to swipe mode
                 mSwipeMode++;
                 if (mSwipeMode > 2) mSwipeMode = 0;
-//                mDockPanelView.setSwipeMode(mSwipeMode);
                 mDockPanelView.post(new Runnable() {
                     @Override
                     public void run() {
@@ -288,7 +262,6 @@ class ClickEngine {
                 });
                 break;
         }
-
         return true;
     }
 
@@ -296,19 +269,26 @@ class ClickEngine {
      * Class to store information across recursive calls
      */
     private static class RecursionInfo {
-        final Point p;
+        final Point p0;
+        final Point p1;
         final Rect bounds = new Rect();
         AccessibilityAction action;
 
-        RecursionInfo(Point p, AccessibilityAction action) {
-            this.p = p;
+        RecursionInfo(Point p0, @Nullable Point p1, AccessibilityAction action) {
             this.action = action;
+            this.p0 = p0;
+            if (p1 != null) this.p1 = p1;
+            else this.p1 = null;
         }
     }
 
-    private AccessibilityNodeInfo getConcernedNodes(Point point, AccessibilityNodeInfo root, AccessibilityAction action) {
-        RecursionInfo ri = new RecursionInfo(point, action);
+    private AccessibilityNodeInfo getConcernedNodes(Point prev, Point curr, AccessibilityNodeInfo root, AccessibilityAction action) {
+        RecursionInfo ri = new RecursionInfo(prev, curr, action);
         return getConcernedNodes0(root, ri);
+    }
+
+    private AccessibilityNodeInfo getConcernedNodes(Point prev, AccessibilityNodeInfo root, AccessibilityAction action) {
+        return getConcernedNodes(prev, null, root, action);
     }
 
     private AccessibilityNodeInfo getConcernedNodes0(AccessibilityNodeInfo node, RecursionInfo ri) {
@@ -317,7 +297,11 @@ class ClickEngine {
         if (node == null) return null;
         if (!node.isVisibleToUser()) return null;
         node.getBoundsInScreen(ri.bounds);
-        if (!ri.bounds.contains(ri.p.x, ri.p.y)) return null;
+
+        if (!ri.bounds.contains(ri.p0.x, ri.p0.y)) return null;
+        if (ri.p1 != null) {
+            if (!ri.bounds.contains(ri.p1.x, ri.p1.y)) return null;
+        }
 
         List<AccessibilityAction> actionList = node.getActionList();
         for (AccessibilityAction x : actionList) {

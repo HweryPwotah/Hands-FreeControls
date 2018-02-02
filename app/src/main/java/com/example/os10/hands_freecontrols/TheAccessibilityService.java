@@ -1,6 +1,7 @@
 package com.example.os10.hands_freecontrols;
 
 import android.accessibilityservice.AccessibilityService;
+import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
@@ -15,7 +16,6 @@ import static android.content.ContentValues.TAG;
 public class TheAccessibilityService extends AccessibilityService {
     private static TheAccessibilityService sTheAccessibilityService;
     private MainEngine mEngine;
-    OverlayView mOverlayView;
 
     /**
      * (required) This method is called back by the system when it detects an
@@ -24,15 +24,23 @@ public class TheAccessibilityService extends AccessibilityService {
      */
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        switch(event.getEventType()) {
-            case AccessibilityEvent.TYPE_VIEW_CLICKED:
 
-                break;
-            case AccessibilityEvent.TYPE_VIEW_FOCUSED:
-
-                break;
-        }
     }
+
+    /**
+     * method called when the user turns off the program's accessibility service
+     */
+    @Override
+    public boolean onUnbind(Intent intent) {
+        terminate();
+        return false;
+    }
+
+    private void terminate() {
+        sTheAccessibilityService = null;
+        mEngine.terminate();
+    }
+
     /**
      * (required) This method is called when the system wants to interrupt the
      * feedback your service is providing, usually in response to a user action
@@ -51,7 +59,8 @@ public class TheAccessibilityService extends AccessibilityService {
     @Override
     public void onServiceConnected() {
         Log.i(TAG, "onServiceConnected");
-        Toast.makeText(this, "Accessibility is granted uyeaayyy !", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Accessibility is granted !", Toast.LENGTH_SHORT).show();
+        performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
 
         sTheAccessibilityService = this;
         if (null == mEngine) mEngine = new MainEngine();
@@ -63,7 +72,9 @@ public class TheAccessibilityService extends AccessibilityService {
      *
      * @return reference to the accessibility service or null
      */
-    public static @Nullable TheAccessibilityService get() {
+    public static
+    @Nullable
+    TheAccessibilityService get() {
         return sTheAccessibilityService;
     }
 

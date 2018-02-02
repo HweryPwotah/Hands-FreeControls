@@ -60,8 +60,7 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
     }
 
     private void PointerInitialization() {
-        float size = 1; //Preferences.get().getUIElementsSize();
-//        mAlphaPointer= (255 * Preferences.get().getGamepadTransparency()) / 100;
+        float size = 1;
 
         // re-scale pointer accordingly
         BitmapDrawable bd = (BitmapDrawable)
@@ -81,6 +80,10 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
 
     RectF progressCircle = new RectF();
 
+    /**
+     * called every time PostInvalidate() is called.
+     * @param canvas user screen
+     */
     @Override
     public void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -105,7 +108,8 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
     }
 
     PointF mSwipeLocation = new PointF();
-    public void saveSwipeLocation(){
+
+    public void saveSwipeLocation() {
         mSwipeLocation.x = mPointerLocation.x;
         mSwipeLocation.y = mPointerLocation.y;
         mSwipemodeEnabled = true;
@@ -139,7 +143,6 @@ public class PointerView extends View implements SharedPreferences.OnSharedPrefe
                 mPointerLocation.y = height - 1;
         }
         // update pointer location
-//        updatePosition(mPointerLocation);
     }
 
 

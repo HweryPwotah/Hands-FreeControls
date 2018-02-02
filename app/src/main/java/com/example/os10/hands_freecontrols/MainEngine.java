@@ -2,13 +2,11 @@ package com.example.os10.hands_freecontrols;
 
 import android.accessibilityservice.AccessibilityService;
 import android.app.Service;
-import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.opencv.android.OpenCVLoader;
 
@@ -24,13 +22,8 @@ public class MainEngine extends AppCompatActivity {
     private DockPanelView mDockPanelView;
     private ClickEngine mClickEngine;
 
-    protected OverlayView getOverlayView() {
-        return mOverlayView;
-    }
-
     // layer for drawing the pointer
     private PointerView mPointerView;
-//    private PointF mPointer= new PointF(0, 0); // avoid creating a new PointF for each frame
 
     static {
         if (!OpenCVLoader.initDebug())
@@ -39,10 +32,13 @@ public class MainEngine extends AppCompatActivity {
             Log.d("SUCCESS", "OpenCV loaded");
     }
 
+    /**
+     * initialize program engines
+     *
+     * @param service accessibility service
+     */
     public void initialize(@NonNull Service service) {
         mService = service;
-//        if (Preferences.initForA11yService(this) == null) return;
-
         //initializing User Interface: ViewGroup
         Log.i("MainEngine", "Try to initialize OverlayView");
         mOverlayView = new OverlayView(mService);
@@ -64,28 +60,40 @@ public class MainEngine extends AppCompatActivity {
         mPointerView = new PointerView(mService);
         mOverlayView.addFullScreenLayer(mPointerView);
 
+        //initializing Pointer Click Handler
         mClickEngine = new ClickEngine((AccessibilityService) mService, mDockPanelView, mPointerView);
         Log.i("MainEngine", "end of initialize");
-
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_CAMERA_PERMISSION) {
-            if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
-                // close the app
-                Toast.makeText(MainEngine.this, "Sorry!!!, you can't use this app without granting permission", Toast.LENGTH_LONG).show();
-                finish();
-            }
-        }
-    }
+//    /**
+//     * launch if something goes wrong such as permission not granted
+//     * @param requestCode
+//     * @param permissions
+//     * @param grantResults
+//     */
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+//            if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
+//                // close the app
+//                Toast.makeText(MainEngine.this, "Sorry, you can't use this app without granting permission", Toast.LENGTH_LONG).show();
+//                finish();
+//            }
+//        }
+//    }
 
+    /**
+     * process pointer movements from previous location to current location.
+     * The function updates the pointer location and handles pointer clicks.
+     *
+     * @param mMotion vector measured from the previous location to current location.
+     */
     public void processMotion(PointF mMotion) {
         mPointerView.MovePointer(mMotion);
 
         PointF mPointerLocation = mPointerView.getPointerLocation();
         boolean clickGenerated = false;
-        clickGenerated= mClickEngine.updatePointerLocation(mPointerLocation);
+        clickGenerated = mClickEngine.updatePointerLocation(mPointerLocation);
 
         mPointerView.updateClickProgress(mClickEngine.getClickProgressPercent());
 
@@ -96,5 +104,23 @@ public class MainEngine extends AppCompatActivity {
         pointer.y = (int) mPointerLocation.y;
 
         mClickEngine.onMouseEvent(pointer, clickGenerated);
+    }
+
+    /**
+     * terminate program. called when accessibility service is unbind-ed from the program.
+     */
+    public void terminate() {
+        mService = null;
+
+        mOverlayView.terminate();
+        mOverlayView = null;
+
+        mDockPanelView = null;
+
+        mCameraView.terminate();
+        mCameraView = null;
+
+        mClickEngine = null;
+        mPointerView = null;
     }
 }

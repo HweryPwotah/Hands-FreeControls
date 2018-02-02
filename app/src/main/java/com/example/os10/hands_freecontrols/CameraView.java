@@ -1,13 +1,13 @@
 package com.example.os10.hands_freecontrols;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.PointF;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.JavaCameraView;
@@ -40,21 +40,11 @@ import java.util.List;
  */
 
 public class CameraView extends RelativeLayout implements CameraBridgeViewBase.CvCameraViewListener2 {
-//
-//    private static final int CAM_SURFACE_MIN_WIDTH_DP = 50;
-//    private static final int CAM_SURFACE_WIDTH_DEFAULT = 80;
-//    private static final int CAM_SURFACE_HEIGHT_DEFAULT = 60;
-//
-//    private int CAM_SURFACE_WIDTH = 176;
-//    private int CAM_SURFACE_HEIGHT = 144;
 
-    //    private SurfaceView mCameraSurfaceView;
-    // OpenCV capture&view facility
     private final CameraBridgeViewBase mCameraView;
     private Mat mRgba;
     private Mat mRgbaF;
     private Mat mRgbaT;
-
 
     //Haar Cascade variables
     private static final String RES_FACE_CASCADE = "haarcascade_frontalface_alt2.xml";
@@ -63,47 +53,29 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
 
     private CascadeClassifier mFaceCascade;
 
-
     private int mAbsoluteFaceSize;
     private static final float FACE_SIZE_PERCENTAGE = 0.3f;
-    private PointF mPointerMotion;
 
     private MainEngine mainEngine;
-    //    SurfaceView getCameraSurface(){
-//        return mCameraView;
-//    }
+    private long mLastFaceDetected;
 
     /**
      * Camera constructor
      *
-     * @param c Context
-     * @param mEngine
+     * @param c       Context
+     * @param mEngine main Engine
      */
     public CameraView(@NonNull Context c, MainEngine mEngine) {
         super(c);
-        //initializing OpenCV
-//        if (!OpenCVLoader.initDebug()) {
-//            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
-//            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_3_0, c, mLoaderCallback);
-//        } else {
-//            Log.d(TAG, "OpenCV library found inside package. Using it!");
-//            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
-//        }
-
         if (!OpenCVLoader.initDebug()) {
             throw new RuntimeException("Cannot initialize OpenCV");
         }
-
         mainEngine = mEngine;
-
-        Resources r = getResources();
-
         //initializing camera
         int cameraId = CameraBridgeViewBase.CAMERA_ID_FRONT;
 
         mCameraView = new JavaCameraView(c, cameraId);
         mCameraView.setCvCameraViewListener(this);
-
         //352 288 works well on most devices
         mCameraView.setMaxFrameSize(352, 288);
         mCameraView.setVisibility(SurfaceView.VISIBLE);
@@ -118,12 +90,6 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
      */
     public void addCameraSurface(SurfaceView v) {
         Log.i("CameraView", "Adding CameraSurface");
-//        mCameraSurfaceView= v;
-
-        // set layout and add to parent
-//        RelativeLayout.LayoutParams lp=
-//                new RelativeLayout.LayoutParams(CAM_SURFACE_WIDTH, CAM_SURFACE_HEIGHT);
-//
         RelativeLayout.LayoutParams lp =
                 new RelativeLayout.LayoutParams(176, 144);
         lp.addRule(RelativeLayout.CENTER_HORIZONTAL);
@@ -171,44 +137,27 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
             protected void onPostExecute(Boolean isSuccess) {
                 if (isSuccess) {
                     mCameraView.enableView();
-//                    mIsDetectionOn = true;
-//                    mTimer.scheduleAtFixedRate(mBlinkCounterTask, 0, DETECTION_STEP_DURATION);
+                } else {
+                    Toast.makeText(getContext(), "CASCADE_INIT_ERROR", Toast.LENGTH_SHORT).show();
+                    Log.e("CameraView", "onPostExecute: CASCADE_INIT_ERROR");
                 }
-//                else {
-//                    mToast.cancel();
-//                    mToast = Toast.makeText(getApplicationContext(), CASCADE_INIT_ERROR, Toast.LENGTH_SHORT);
-//                    mToast.show();
-//                }
                 super.onPostExecute(isSuccess);
             }
         }).execute(mRawRes);
     }
 
-//    BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-//        // OpenCV library is loaded, you may want to perform some actions.
-//        // For example, displaying a success or failure message.
-//        @Override
-//        public void onManagerConnected(int status) {
-//            switch (status) {
-//                case LoaderCallbackInterface.SUCCESS: {
-//                    Log.i(TAG, "OpenCV loaded successfully");
-//                }
-//                break;
-//                default: {
-//                    super.onManagerConnected(status);
-//                }
-//                break;
-//            }
-//        }
-//    };
-
+    /**
+     * called when the user first initiates the view
+     *
+     * @param width  -  the width of the frames that will be delivered
+     * @param height - the height of the frames that will be delivered
+     */
     @Override
     public void onCameraViewStarted(int width, int height) {
         //initialize variable
         mRgba = new Mat(height, width, CvType.CV_8UC3);
         mRgbaF = new Mat(height, width, CvType.CV_8UC3);
         mRgbaT = new Mat(width, width, CvType.CV_8UC3);
-
 
         mCurrGrayImg = new Mat(height, width, CvType.CV_8UC4);
 
@@ -240,25 +189,34 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
     Rect mFaceLocation = new Rect();
     Rect mFaceFeature = new Rect();
 
+    /**
+     * called every frame. handles user facial movements and convert it to motion vector.
+     *
+     * @param inputFrame current frame retrieved from the camera
+     * @return return frame
+     */
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         PointF mMotion = new PointF();
 
-        // TODO: 1/21/2018 change this to preProcessing class
-        mRgba = inputFrame.rgba();
-        // Rotate mRgba 90 degrees
-        Core.transpose(mRgba, mRgbaT);
-        Imgproc.resize(mRgbaT, mRgbaF, mRgba.size(), 0, 0, 0);
-        Core.flip(mRgbaF, mRgba, -1);
-        mRgbaT.release();
-        mRgbaF.release();
+        //check how long has elapsed since last time face is detected
+        if (getElapsedTime() > 30000) { //30 seconds
+            Toast.makeText(getContext(), "Exiting program", Toast.LENGTH_SHORT).show();
+            // TODO: 2/2/2018 quit program
+            terminate();
+        }
 
-        Imgproc.cvtColor(mRgba, mCurrGrayImg, Imgproc.COLOR_RGBA2GRAY);
+        mRgba = inputFrame.rgba();
+        PreProcessing();
+
+        ConvertToGrayscale(mRgba, mCurrGrayImg);
 
         //set Region
         Rect mFace = isFaceDetected(mCurrGrayImg);
         if (mFace.width != 0 && mFace.height != 0) {
             //face is detected
+            setLastFaceDetectedTime();
+
             //set Region of Interest to the face
             mFaceLocation = mFace.clone();
 
@@ -363,15 +321,32 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
         mMotion.x = xVel;
         mMotion.y = yVel;
 
-//        setPointerMotion(mMotion);
-//        mPointerMotion = mCameraView.getPointerMotion();
-
         mainEngine.processMotion(mMotion);
 
         mCurrGrayImg.copyTo(mPrevGrayImg);
         return mRgba;
     }
 
+    private void ConvertToGrayscale(Mat src, Mat dst) {
+        Imgproc.cvtColor(src, dst, Imgproc.COLOR_RGBA2GRAY);
+    }
+
+    private void PreProcessing() {
+        // Rotate mRgba 90 degrees
+        Core.transpose(mRgba, mRgbaT);
+        Imgproc.resize(mRgbaT, mRgbaF, mRgba.size(), 0, 0, 0);
+        Core.flip(mRgbaF, mRgba, -1);
+        mRgbaT.release();
+        mRgbaF.release();
+    }
+
+    /**
+     * check whether face is detected from the camera. A rectangle will be drawn around the user's
+     * face when the face is detected. Otherwise, return a rectangle with 0 width and 0 height.
+     *
+     * @param img camera frame
+     * @return rectangle around the face
+     */
     private Rect isFaceDetected(Mat img) {
         if (mFaceCascade == null) {
             Log.e("CameraView", "Face Cascade is null");
@@ -396,10 +371,13 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
         return mFace;
     }
 
-//    public void obtainPointerView(PointerView pointerView) {
-//        mPointerView = pointerView;
-//    }
-
+    /**
+     * draw a cross on the point p. for debugging purposes
+     *
+     * @param inputFrame frame
+     * @param p          the point to draw a cross on
+     * @param color      color scalar RGBA
+     */
     private void drawCross(Mat inputFrame, Point p, Scalar color) {
         int thickness = 2;
         int radius = 4;
@@ -426,7 +404,14 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
         Imgproc.line(inputFrame, p1, p2, color, thickness);
     }
 
-
+    /**
+     * handles rectangle interaction with the edge of the screen to assure the rectangle not moving
+     * out of the screen
+     *
+     * @param mFaceLocation the rectangle that needs handling
+     * @param mRgba         screen
+     * @return handled rectangle
+     */
     private Rect HandleRectOnBorder(Rect mFaceLocation, Mat mRgba) {
         int rows = mRgba.rows();
         int cols = mRgba.cols();
@@ -476,12 +461,26 @@ public class CameraView extends RelativeLayout implements CameraBridgeViewBase.C
         }
     }
 
-    public void setPointerMotion(PointF PointerMotion) {
-        mPointerMotion = PointerMotion;
+    /**
+     * terminate camera.
+     */
+    public void terminate() {
+        stopCamera();
     }
 
-    public PointF getPointerMotion() {
-        return mPointerMotion;
+    private void stopCamera() {
+        try {
+            mCameraView.disableView();
+        } catch (Exception error) {
+            Log.e("CameraView", error.getLocalizedMessage());
+        }
     }
 
+    public long getElapsedTime() {
+        return System.currentTimeMillis() - mLastFaceDetected;
+    }
+
+    public void setLastFaceDetectedTime() {
+        mLastFaceDetected = System.currentTimeMillis();
+    }
 }
